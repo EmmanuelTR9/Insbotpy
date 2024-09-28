@@ -1,14 +1,19 @@
-
 import instaloader
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 import os
 
-# Token de tu bot
-TOKEN = '7282477040:AAEbJvt8Hwl9BMMbGOut5NI3HVuXcDcTUGE'
+# Obtener el token del bot desde las variables de entorno
+TOKEN = os.getenv('TOKEN')
 
 # Inicializar Instaloader
 loader = instaloader.Instaloader()
+
+# (Opcional) Autenticarse en Instagram usando variables de entorno si se necesita para evitar bloqueos
+USERNAME = os.getenv('INSTAGRAM_USERNAME')
+PASSWORD = os.getenv('INSTAGRAM_PASSWORD')
+if USERNAME and PASSWORD:
+    loader.login(USERNAME, PASSWORD)
 
 # Función para descargar video de Instagram
 def download_video(url):
@@ -19,7 +24,9 @@ def download_video(url):
 
         # Verificar si es un video y descargarlo
         if post.is_video:
-            filename = loader.download_post(post, target="videos")
+            if not os.path.exists("videos"):
+                os.makedirs("videos")
+            loader.download_post(post, target="videos")
             for root, dirs, files in os.walk("videos"):
                 for file in files:
                     if file.endswith(".mp4"):
@@ -31,7 +38,7 @@ def download_video(url):
         print(f"Error al descargar el video: {str(e)}")
         return None
 
-# Comando start
+# Comando /start
 async def start(update: Update, context: CallbackContext):
     await update.message.reply_text('Hola! Envía un enlace de video de Instagram para descargar.')
 
@@ -56,7 +63,7 @@ async def handle_message(update: Update, context: CallbackContext):
 def main():
     application = Application.builder().token(TOKEN).build()
 
-    # Comandos y mensajes
+    # Añadir comandos y manejadores de mensajes
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 

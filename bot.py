@@ -9,11 +9,29 @@ TOKEN = os.getenv('TOKEN')
 # Inicializar Instaloader
 loader = instaloader.Instaloader()
 
-# (Opcional) Autenticarse en Instagram usando variables de entorno si se necesita para evitar bloqueos
+# Cargar la sesión de Instagram desde un archivo, si existe
 USERNAME = os.getenv('INSTAGRAM_USERNAME')
 PASSWORD = os.getenv('INSTAGRAM_PASSWORD')
-if USERNAME and PASSWORD:
-    loader.login(USERNAME, PASSWORD)
+
+def cargar_sesion_instagram():
+    try:
+        # Intentar cargar la sesión guardada
+        loader.load_session_from_file(USERNAME)
+        print("Sesión de Instagram cargada correctamente.")
+    except FileNotFoundError:
+        # Si no existe una sesión guardada, iniciar sesión manualmente y guardar la sesión
+        if USERNAME and PASSWORD:
+            try:
+                loader.login(USERNAME, PASSWORD)
+                loader.save_session_to_file(USERNAME)
+                print("Sesión de Instagram iniciada y guardada correctamente.")
+            except Exception as e:
+                print(f"Error al iniciar sesión en Instagram: {e}")
+        else:
+            print("No se proporcionaron credenciales de Instagram.")
+
+# Llamar a la función para cargar o iniciar sesión en Instagram
+cargar_sesion_instagram()
 
 # Función para descargar video de Instagram
 def download_video(url):
